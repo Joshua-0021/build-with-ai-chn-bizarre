@@ -1,0 +1,11 @@
+# PachApp Backend Dependencies
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+motor==3.7.0
+pymongo==4.10.1
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+pydantic-settings==2.7.1
+python-multipart==0.0.20
+Pillow>=10.0.0
+google-cloud-aiplatform==1.79.0
