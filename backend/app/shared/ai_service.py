@@ -1,11 +1,10 @@
 """
-AI Service — Google Vertex AI (Gemini) integration for waste image classification.
-Includes demo mode for local development without GCP credentials.
+AI Service — Google Gemini API integration for waste image classification.
+Includes demo mode for local development without credentials.
 """
 
 import json
 import random
-import base64
 import logging
 
 from app.core.config import settings
@@ -13,20 +12,30 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 # Structured prompt for waste classification
-CLASSIFICATION_PROMPT = """Analyze this image of collected household waste and classify the items you see.
-Return ONLY a valid JSON object with waste categories as keys and integer counts as values.
-Use only these categories: plastic, metal, paper, glass, organic, ewaste, textile.
-If a category has zero items, omit it from the response.
+CLASSIFICATION_PROMPT = """You are a professional waste sorting AI. Look carefully at this image of collected waste materials.
 
-Example response format:
-{"plastic": 3, "metal": 2, "paper": 5}
+Your job is to identify waste items and count how many individual items belong to each of these 4 waste categories:
+- plastic: plastic bottles, bags, wrappers, containers, cups, straws
+- metal: tin cans, aluminum foil, bottle caps, scrap metal, steel 
+- paper: cardboard boxes, newspaper, paper bags, magazines, tissue paper
+- rubber: rubber bands, tires, gloves, erasers, rubber seals
 
-IMPORTANT: Return ONLY the JSON object, no other text or markdown formatting."""
+Instructions:
+1. Look carefully at each visible object in the image.
+2. Count how many items belong to each category.
+3. Return ONLY a JSON object with the category name as the key and the item count as an integer value.
+4. Only include categories that you can actually see in the image (skip categories with 0 items).
+5. Be as accurate as possible — do not guess.
+
+Response format (JSON only, no explanation, no markdown):
+{"plastic": 2, "metal": 1}
+
+Now analyze the image:"""
 
 
 async def classify_waste_image(image_bytes: bytes, mime_type: str = "image/jpeg") -> dict:
     """
-    Classify waste items in an image using Vertex AI (Gemini) or demo mode.
+    Classify waste items in an image using Gemini AI or demo mode.
 
     Args:
         image_bytes: Raw image bytes
@@ -38,75 +47,93 @@ async def classify_waste_image(image_bytes: bytes, mime_type: str = "image/jpeg"
     if settings.DEMO_MODE:
         return _demo_classify()
 
-    return await _vertex_ai_classify(image_bytes, mime_type)
+    return await _gemini_classify(image_bytes, mime_type)
 
 
 def _demo_classify() -> dict:
     """Generate realistic mock classification data for demo/testing."""
-    waste_types = ["plastic", "metal", "paper", "glass", "organic", "ewaste", "textile"]
-
-    # Randomly select 2-5 waste types with random counts
-    selected = random.sample(waste_types, k=random.randint(2, 5))
-    result = {wtype: random.randint(1, 10) for wtype in selected}
-
-    logger.info(f"🧪 Demo mode classification: {result}")
+    waste_types = ["plastic", "metal", "paper", "rubber"]
+    selected = random.sample(waste_types, k=random.randint(2, 4))
+    result = {wtype: random.randint(1, 8) for wtype in selected}
+    logger.info(f"Demo mode classification: {result}")
     return result
 
 
-async def _vertex_ai_classify(image_bytes: bytes, mime_type: str) -> dict:
-    """Send image to Vertex AI Gemini for classification."""
+async def _gemini_classify(image_bytes: bytes, mime_type: str) -> dict:
+    """Send image to Gemini AI for classification via API key."""
     try:
-        import vertexai
-        from vertexai.generative_models import GenerativeModel, Part
+        import google.generativeai as genai
+        from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
-        # Initialize Vertex AI
-        vertexai.init(
-            project=settings.GCP_PROJECT_ID,
-            location=settings.GCP_LOCATION,
+        api_key = settings.GEMINI_API_KEY
+        if not api_key or api_key == "YOUR_API_KEY_HERE":
+            logger.warning("No valid GEMINI_API_KEY set. Falling back to demo mode.")
+            return _demo_classify()
+
+        # Initialize Gemini API
+        genai.configure(api_key=api_key)
+
+        # Load the model
+        model = genai.GenerativeModel(
+            model_name=settings.VERTEX_AI_MODEL,
+            safety_settings={
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+            }
         )
 
-        # Load model
-        model = GenerativeModel(settings.VERTEX_AI_MODEL)
-
-        # Create image part from bytes
-        image_part = Part.from_data(data=image_bytes, mime_type=mime_type)
+        # Create image blob properly
+        image_part = {"mime_type": mime_type, "data": image_bytes}
 
         # Generate classification
         response = model.generate_content(
-            [CLASSIFICATION_PROMPT, image_part],
-            generation_config={
-                "temperature": 0.1,
-                "max_output_tokens": 256,
-            },
+            contents=[CLASSIFICATION_PROMPT, image_part],
+            generation_config=genai.GenerationConfig(
+                temperature=0.0,        # zero temperature for deterministic output
+                max_output_tokens=256,
+                response_mime_type="application/json",
+            ),
         )
 
-        # Parse the JSON response
         response_text = response.text.strip()
+        logger.info(f"Raw Gemini response: {response_text}")
 
-        # Clean up potential markdown formatting
+        # Strip markdown fence if present
         if response_text.startswith("```"):
             lines = response_text.split("\n")
-            response_text = "\n".join(lines[1:-1])
+            response_text = "\n".join(lines[1:-1]).strip()
 
         waste_data = json.loads(response_text)
 
-        # Validate: ensure all values are integers
+        # Validate: only accept our 4 allowed categories, cast to int
+        allowed = {"plastic", "metal", "paper", "rubber"}
         validated = {}
         for key, value in waste_data.items():
-            key_lower = key.lower().strip()
-            validated[key_lower] = int(value)
+            k = key.lower().strip()
+            if k in allowed:
+                validated[k] = max(0, int(value))
 
-        logger.info(f"🤖 Vertex AI classification: {validated}")
+        logger.info(f"Gemini classification result: {validated}")
         return validated
 
     except ImportError:
-        logger.warning("Vertex AI SDK not installed. Falling back to demo mode.")
+        logger.warning("google-generativeai SDK not installed. Falling back to demo mode.")
         return _demo_classify()
 
     except json.JSONDecodeError as e:
-        logger.error(f"Failed to parse AI response as JSON: {e}")
-        raise ValueError("AI returned invalid classification data. Please try again.")
+        logger.error(f"Could not parse Gemini response as JSON: {e}. Response was: {response_text if 'response_text' in dir() else 'N/A'}")
+        # Return empty result rather than crashing the user's experience
+        return {}
 
     except Exception as e:
-        logger.error(f"Vertex AI classification failed: {e}")
+        error_str = str(e).lower()
+        if any(kw in error_str for kw in ["api_key", "key not valid", "quota", "permission"]):
+            logger.warning(f"Gemini API key error. Falling back to demo mode. Error: {e}")
+            return _demo_classify()
+
+        logger.error(f"Gemini classification failed: {e}")
         raise ValueError(f"Waste classification failed: {str(e)}")
+
+
