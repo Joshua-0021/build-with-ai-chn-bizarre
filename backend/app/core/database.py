@@ -31,11 +31,11 @@ async def connect_db():
         await db.qr_redemptions.create_index("qr_id", unique=True)
         await db.qr_redemptions.create_index("house_id")
 
-        print(f"✅ Connected to MongoDB: {settings.MONGODB_DB_NAME}")
+        print(f"Connected to MongoDB: {settings.MONGODB_DB_NAME}")
 
     except Exception as e:
-        print(f"⚠️  MongoDB connection failed: {e}")
-        print("⚠️  Make sure MongoDB is running. Starting in offline mode...")
+        print(f"MongoDB connection failed: {e}")
+        print("Make sure MongoDB is running. Starting in offline mode...")
         # Still create client/db references — operations will fail gracefully
         client = AsyncIOMotorClient(
             settings.MONGODB_URL,
@@ -49,7 +49,7 @@ async def disconnect_db():
     global client
     if client:
         client.close()
-        print("🔌 Disconnected from MongoDB")
+        print("Disconnected from MongoDB")
 
 
 def get_db() -> AsyncIOMotorDatabase:

@@ -66,5 +66,24 @@ async def health_check():
 @app.get("/api/v1/points-config", tags=["Config"])
 async def get_points_config():
     """Get the current waste-to-points mapping."""
-    from app.shared.points import POINT_VALUES
-    return {"point_values": POINT_VALUES}
+    from app.shared.points import get_point_values
+    values = await get_point_values()
+    return {"point_values": values}
+
+from typing import Dict
+from fastapi import Body
+
+@app.post("/api/v1/points-config", tags=["Config"])
+async def update_points_config(config: Dict[str, float] = Body(...)):
+    """Update waste-to-points mapping in the database."""
+    from app.core.database import get_db
+    db = get_db()
+    if db is None:
+        return {"error": "Database not connected"}
+        
+    await db.points_config.update_one(
+        {"_id": "main_config"},
+        {"$set": {"values": config}},
+        upsert=True
+    )
+    return {"message": "Configuration updated successfully", "point_values": config}

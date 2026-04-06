@@ -11,6 +11,7 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../../constants/theme';
@@ -194,7 +195,8 @@ export default function ScannerScreen({ navigation }: any) {
   );
 }
 
-const SCAN_AREA_SIZE = 260;
+const { width } = Dimensions.get('window');
+const SCAN_AREA_SIZE = Math.min(width * 0.7, 300);
 
 const styles = StyleSheet.create({
   container: {
