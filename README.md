@@ -35,7 +35,7 @@ Google Vertex AI is integrated into the Python FastAPI backend to automatically 
 
 ## Demo Video
 Upload your demo video to Google Drive and paste the shareable link here(max 3 minutes).
-[Watch Demo](https://drive.google.com/file/d/1gaR_rvAfCOy4jN6LcBqtGvdB2NstCXwd/view?usp=drivesdk)
+[Watch Demo]([https://drive.google.com/file/d/1gaR_rvAfCOy4jN6LcBqtGvdB2NstCXwd/view?usp=drivesdk](https://drive.google.com/file/d/1My4uKEKtZAKdWZb7oxg3bBym9Ho-mlJi/view?usp=drivesdk))
 
 ---
 
