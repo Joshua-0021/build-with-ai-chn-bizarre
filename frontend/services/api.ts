@@ -71,7 +71,7 @@ export const userAPI = {
 
 // --- Green Army ---
 export const greenArmyAPI = {
-  classifyWaste: (house_id: string, imageUri: string, fileName: string) => {
+  classifyOnly: (house_id: string, imageUri: string, fileName: string) => {
     const formData = new FormData();
     formData.append('house_id', house_id);
     formData.append('image', {
@@ -80,11 +80,14 @@ export const greenArmyAPI = {
       type: 'image/jpeg',
     } as any);
 
-    return api.post(Endpoints.CLASSIFY, formData, {
+    return api.post(Endpoints.CLASSIFY_ONLY, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
-      timeout: 60000, // AI classification may take longer
+      timeout: 60000,
     });
   },
+
+  confirmWaste: (house_id: string, waste_data: Record<string, number>, image_ref: string) =>
+    api.post(Endpoints.CONFIRM_WASTE, { house_id, waste_data, image_ref }),
 
   getTransactions: () =>
     api.get(Endpoints.GA_TRANSACTIONS),

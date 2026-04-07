@@ -6,7 +6,7 @@
 // For Android emulator: http://10.0.2.2:8000
 // For iOS simulator / physical device: http://<your-ip>:8000
 // For web: http://localhost:8000
-export const API_BASE_URL = 'http://10.253.161.149:8000';
+export const API_BASE_URL = 'http://172.20.10.3:8000';
 
 export const Endpoints = {
   // Auth
@@ -19,7 +19,8 @@ export const Endpoints = {
   REDEMPTIONS: '/api/v1/users/redemptions',
 
   // Green Army
-  CLASSIFY: '/api/v1/greenarmy/classify',
+  CLASSIFY_ONLY: '/api/v1/greenarmy/classify-only',
+  CONFIRM_WASTE: '/api/v1/greenarmy/confirm',
   GA_TRANSACTIONS: '/api/v1/greenarmy/transactions',
 
   // QR
