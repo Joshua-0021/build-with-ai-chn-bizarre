@@ -20,13 +20,12 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_MINUTES: int = 1440  # 24 hours
 
-    # Google Cloud / Vertex AI
-    GCP_PROJECT_ID: Optional[str] = None
-    GCP_LOCATION: str = "us-central1"
+    # Google AI Studio / Gemini
+    GEMINI_API_KEY: Optional[str] = None
     VERTEX_AI_MODEL: str = "gemini-2.0-flash"
 
     # Demo mode — if True, AI classification returns mock data
-    DEMO_MODE: bool = True
+    DEMO_MODE: bool = False
 
     # File uploads
     UPLOAD_DIR: str = "uploads"

@@ -57,8 +57,16 @@ export default function LoginScreen() {
       } else {
         await login(houseId.trim(), password);
       }
-    } catch (error: any) {
-      const message = error?.response?.data?.detail || 'Something went wrong. Please try again.';
+      let message = 'Something went wrong. Please try again.';
+      const detail = error?.response?.data?.detail;
+      
+      if (Array.isArray(detail) && detail.length > 0) {
+        // Handle FastAPI validation errors
+        message = `${detail[0].loc[detail[0].loc.length - 1]}: ${detail[0].msg}`;
+      } else if (typeof detail === 'string') {
+        message = detail;
+      }
+      
       Alert.alert('Error', message);
     } finally {
       setIsLoading(false);

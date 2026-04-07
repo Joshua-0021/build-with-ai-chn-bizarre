@@ -13,21 +13,28 @@ from passlib.context import CryptContext
 from app.core.config import settings
 from app.core.database import get_db
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import hashlib
+import os
 
 # Bearer token scheme
 bearer_scheme = HTTPBearer()
 
-
 def hash_password(password: str) -> str:
-    """Hash a plaintext password."""
-    return pwd_context.hash(password)
+    """Hash a plaintext password using standard library PBKDF2."""
+    salt = os.urandom(16)
+    hashed = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
+    return f"{salt.hex()}:{hashed.hex()}"
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plaintext password against its hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        salt_hex, hash_hex = hashed_password.split(':')
+        salt = bytes.fromhex(salt_hex)
+        hash_to_check = hashlib.pbkdf2_hmac('sha256', plain_password.encode('utf-8'), salt, 100000)
+        return hash_to_check.hex() == hash_hex
+    except Exception:
+        return False
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:

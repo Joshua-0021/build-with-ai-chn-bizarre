@@ -65,7 +65,7 @@ async def classify_and_assign_points(
         )
 
     # Calculate points
-    points = calculate_points(waste_data)
+    points = await calculate_points(waste_data)
 
     # Update user's total points
     result = await db.users.update_one(

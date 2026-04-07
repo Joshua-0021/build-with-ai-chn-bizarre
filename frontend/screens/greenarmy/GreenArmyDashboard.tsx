@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
   },
   previewImage: {
     width: '100%',
-    height: 200,
+    aspectRatio: 4 / 3,
     borderRadius: BorderRadius.md,
   },
   removeImageBtn: {
