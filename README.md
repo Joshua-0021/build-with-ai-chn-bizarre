@@ -19,17 +19,17 @@ Google Vertex AI is integrated into the Python FastAPI backend to automatically 
 
 ## Proof of Google AI Usage
 
-<img src="./assets/1000267610.jpg" alt="AI Proof" width="600"/>
+![AI Proof](assets/1000267610.jpg)
 
 ---
 
 ## Screenshots 
 
-<img src="./assets/1000267603.jpg" alt="Screenshot 1" width="250"/>
-<img src="./assets/1000267605.jpg" alt="Screenshot 2" width="250"/>
-<img src="./assets/1000267606.jpg" alt="Screenshot 3" width="250"/>
-<img src="./assets/1000267607.jpg" alt="Screenshot 4" width="250"/>
-<img src="./assets/1000267608.jpg" alt="Screenshot 5" width="250"/>
+![Screenshot 1](assets/1000267603.jpg)
+![Screenshot 2](assets/1000267605.jpg)
+![Screenshot 3](assets/1000267606.jpg)
+![Screenshot 4](assets/1000267607.jpg)
+![Screenshot 5](assets/1000267608.jpg)
 
 ---
 
